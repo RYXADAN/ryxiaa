@@ -1,0 +1,8 @@
+{
+  "name": "RYXIA — AI Assistant",
+  "description": "Plateforme d'intelligence artificielle nouvelle génération par Adan. Your AI. Your way. Modèles avancés, code, études, créativité et streaming instantané.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

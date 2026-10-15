@@ -1,0 +1,148 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Authenticated user profile in RYXIA",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "User identifier matching auth.uid"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "avatar": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "email", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "A chat conversation thread",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 250
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["general", "code", "study", "creative", "fast"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "title", "mode", "createdAt", "updatedAt"]
+    },
+    "Message": {
+      "title": "ChatMessage",
+      "description": "A message within a conversation",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "conversationId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "assistant", "system"]
+        },
+        "content": {
+          "type": "string",
+          "maxLength": 100000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "model": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": ["id", "conversationId", "userId", "role", "content", "createdAt", "model"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User preferences and settings",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["dark", "light", "obsidian", "midnight"]
+        },
+        "fontSize": {
+          "type": "string",
+          "enum": ["sm", "md", "lg"]
+        },
+        "enterSends": {
+          "type": "boolean"
+        },
+        "animations": {
+          "type": "boolean"
+        },
+        "aiProvider": {
+          "type": "string",
+          "enum": ["auto", "openai", "gemini"]
+        }
+      },
+      "required": ["userId", "theme", "fontSize", "enterSends", "animations", "aiProvider"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document owned by the user"
+    },
+    "/users/{userId}/settings/preferences": {
+      "schema": "UserSettings",
+      "description": "User preferences document"
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Conversation thread documents"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual messages belonging to a conversation"
+    }
+  }
+}

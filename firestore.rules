@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Users validation ---
+    function isValidUser(data, userId) {
+      return data.id is string && data.id == userId
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 200
+        && (!('avatar' in data) || (data.avatar is string && data.avatar.size() <= 500))
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidUser(incoming(), userId)
+        && incoming().keys().hasAll(['id', 'name', 'email', 'createdAt'])
+        && incoming().keys().hasOnly(['id', 'name', 'email', 'avatar', 'createdAt']);
+      allow update: if isOwner(userId)
+        && isValidUser(incoming(), userId)
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email', 'avatar']);
+      allow delete: if isOwner(userId);
+
+      // User Settings Subcollection
+      match /settings/preferences {
+        allow get: if isOwner(userId);
+        allow create, update: if isOwner(userId)
+          && incoming().userId == userId
+          && incoming().theme in ['dark', 'light', 'obsidian', 'midnight']
+          && incoming().fontSize in ['sm', 'md', 'lg']
+          && incoming().enterSends is bool
+          && incoming().animations is bool
+          && incoming().aiProvider in ['auto', 'openai', 'gemini'];
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // --- Conversations validation ---
+    function isValidConversation(data, userId) {
+      return data.id is string && data.id.size() > 0 && data.id.size() <= 128
+        && data.userId is string && data.userId == userId
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 250
+        && data.mode in ['general', 'code', 'study', 'creative', 'fast']
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    match /conversations/{conversationId} {
+      allow get, list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(conversationId)
+        && isValidConversation(incoming(), request.auth.uid)
+        && incoming().keys().hasAll(['id', 'userId', 'title', 'mode', 'createdAt', 'updatedAt'])
+        && incoming().keys().hasOnly(['id', 'userId', 'title', 'mode', 'createdAt', 'updatedAt']);
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && isValidConversation(incoming(), request.auth.uid)
+        && incoming().id == existing().id
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'mode', 'updatedAt']);
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      // Messages Subcollection with Master Gate to parent conversation
+      match /messages/{messageId} {
+        allow get, list: if isSignedIn()
+          && get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
+        allow create: if isSignedIn()
+          && isValidId(messageId)
+          && get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid
+          && incoming().id is string && incoming().id.size() <= 128
+          && incoming().conversationId == conversationId
+          && incoming().userId == request.auth.uid
+          && incoming().role in ['user', 'assistant', 'system']
+          && incoming().content is string && incoming().content.size() <= 100000
+          && incoming().createdAt is string && incoming().createdAt.size() <= 50
+          && incoming().model is string && incoming().model.size() <= 100;
+        allow update: if false; // Messages are immutable
+        allow delete: if isSignedIn()
+          && get(/databases/$(database)/documents/conversations/$(conversationId)).data.userId == request.auth.uid;
+      }
+    }
+  }
+}

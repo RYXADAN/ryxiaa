@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      (function() {
+        try {
+          var _fetch = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() { return _fetch; },
+            set: function(fn) { _fetch = fn; },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {}
+        try {
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            var _pFetch = Window.prototype.fetch;
+            Object.defineProperty(Window.prototype, 'fetch', {
+              get: function() { return _pFetch; },
+              set: function(fn) { _pFetch = fn; },
+              configurable: true,
+              enumerable: true
+            });
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <title>RYXIA — AI Assistant</title>
+    <meta name="description" content="Plateforme d'intelligence artificielle nouvelle génération par Adan. Your AI. Your way. Modèles avancés, code, études, créativité et streaming instantané." />
+    <meta property="og:title" content="RYXIA — AI Assistant" />
+    <meta property="og:description" content="Plateforme d'intelligence artificielle nouvelle génération par Adan. Your AI. Your way. Modèles avancés, code, études, créativité et streaming instantané." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#0b0d11] text-[#f3f4f6] antialiased selection:bg-teal-500/25 selection:text-teal-200">
+    <div id="root"></div>
+    <script type="module" src="./src/main.tsx"></script>
+  </body>
+</html>
+
